@@ -1,0 +1,143 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Subscription Plans{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Subscription Plans</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">Subscription Plans</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-money-bill me-1"></i>
+                Manage Subscription Plans
+            </div>
+            <a href="{{ url_for('settings.add_subscription') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add New Plan
+            </a>
+        </div>
+        <div class="card-body">
+            <table id="subscriptionPlansTable" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Duration</th>
+                        <th>Scrape Limit</th>
+                        <th>Status</th>
+                        <th>Featured</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in plans %}
+                    <tr>
+                        <td>{{ plan.name }}</td>
+                        <td>{{ plan.currency }} {{ plan.price }}</td>
+                        <td>{{ plan.duration_days }} days</td>
+                        <td>{% if plan.scrape_limit == 0 %}Unlimited{% else %}{{ plan.scrape_limit }}{% endif %}</td>
+                        <td>
+                            {% if plan.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if plan.is_featured %}
+                            <span class="badge bg-info"><i class="fas fa-star"></i> Yes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('settings.view_subscription', plan_id=plan.id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('settings.edit_subscription', plan_id=plan.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteModal" 
+                                        data-plan-id="{{ plan.id }}"
+                                        data-plan-name="{{ plan.name }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No subscription plans found. <a href="{{ url_for('settings.add_subscription') }}">Create one</a>.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the "<span id="planName"></span>" subscription plan? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" action="" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        new DataTable('#subscriptionPlansTable', {
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+        
+        // Handle delete modal
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const planId = button.getAttribute('data-plan-id');
+                const planName = button.getAttribute('data-plan-name');
+                
+                document.getElementById('planName').textContent = planName;
+                document.getElementById('deleteForm').action = "{{ url_for('settings.delete_subscription', plan_id=0) }}".replace('0', planId);
+            });
+        }
+    });
+</script>
+{% endblock %} 

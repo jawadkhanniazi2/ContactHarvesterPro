@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block title %}Billing History{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Billing History</h1>
+        <a href="{{ url_for('user.subscription') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Subscription
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Transaction History</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-2" id="printInvoices">
+                        <i class="fas fa-print me-2"></i>Print
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" id="downloadCSV">
+                        <i class="fas fa-download me-2"></i>Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Invoice ID</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ transaction.invoice_id }}</td>
+                            <td>{{ transaction.description }}</td>
+                            <td>${{ transaction.amount }}</td>
+                            <td>
+                                {% if transaction.status == 'successful' %}
+                                <span class="badge bg-success">Successful</span>
+                                {% elif transaction.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('user.download_invoice', invoice_id=transaction.invoice_id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-file-pdf me-1"></i> Invoice
+                                    </a>
+                                    {% if transaction.status == 'successful' %}
+                                    <a href="{{ url_for('user.download_receipt', invoice_id=transaction.invoice_id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-receipt me-1"></i> Receipt
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-receipt text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h4>No Transactions Yet</h4>
+                <p class="text-muted mb-4">Your billing history will appear here once you make a payment.</p>
+                <a href="{{ url_for('user.subscription') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Return to Subscription Page
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Print invoices function
+    $('#printInvoices').click(function() {
+        window.print();
+    });
+    
+    // Download CSV function
+    $('#downloadCSV').click(function() {
+        // In a real application, this would be an AJAX call to download the CSV
+        alert('In a real application, this would download your billing history as CSV.');
+    });
+});
+</script>
+{% endblock %} 

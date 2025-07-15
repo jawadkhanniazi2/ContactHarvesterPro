@@ -1,0 +1,97 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Payment Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Payment Settings</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">Payment Settings</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-credit-card me-1"></i>
+            Payment Configuration
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="payment_currency" class="form-label">Default Currency</label>
+                            <select class="form-select" id="payment_currency" name="payment_currency">
+                                {% for currency in currencies %}
+                                <option value="{{ currency.code }}" {% if settings.payment_currency == currency.code %}selected{% endif %}>
+                                    {{ currency.code }} - {{ currency.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Stripe Configuration</h5>
+                        <div class="mb-3">
+                            <label for="stripe_public_key" class="form-label">Stripe Public Key</label>
+                            <input type="text" class="form-control" id="stripe_public_key" name="stripe_public_key" value="{{ settings.stripe_public_key }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="stripe_secret_key" class="form-label">Stripe Secret Key</label>
+                            <input type="password" class="form-control" id="stripe_secret_key" name="stripe_secret_key" value="{{ settings.stripe_secret_key }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="mb-3">PayPal Configuration</h5>
+                        <div class="mb-3">
+                            <label for="paypal_client_id" class="form-label">PayPal Client ID</label>
+                            <input type="text" class="form-control" id="paypal_client_id" name="paypal_client_id" value="{{ settings.paypal_client_id }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="paypal_secret" class="form-label">PayPal Secret</label>
+                            <input type="password" class="form-control" id="paypal_secret" name="paypal_secret" value="{{ settings.paypal_secret }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="paypal_mode" class="form-label">PayPal Mode</label>
+                            <select class="form-select" id="paypal_mode" name="paypal_mode">
+                                <option value="sandbox" {% if settings.paypal_mode == 'sandbox' %}selected{% endif %}>Sandbox (Testing)</option>
+                                <option value="live" {% if settings.paypal_mode == 'live' %}selected{% endif %}>Live (Production)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    These payment gateway keys are used for processing subscription payments. Make sure to use valid credentials.
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

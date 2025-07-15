@@ -1,0 +1,136 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Subscription Plans{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Subscription Plans</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">Subscription Plans</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-tags me-1"></i>
+                Manage Subscription Plans
+            </div>
+            <a href="{{ url_for('settings.add_subscription') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus-circle"></i> Add New Plan
+            </a>
+        </div>
+        <div class="card-body">
+            {% if plans %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="subscriptionTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Plan Name</th>
+                            <th>Price</th>
+                            <th>Duration</th>
+                            <th>Scrape Limit</th>
+                            <th>Status</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plan in plans %}
+                        <tr>
+                            <td>{{ plan.name }}</td>
+                            <td>{{ plan.price }} {{ plan.currency }}</td>
+                            <td>{{ plan.duration_days }} days</td>
+                            <td>
+                                {% if plan.scrape_limit == 0 %}
+                                Unlimited
+                                {% else %}
+                                {{ plan.scrape_limit }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if plan.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if plan.is_featured %}
+                                <span class="badge bg-info">Featured</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('settings.edit_subscription', plan_id=plan.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ plan.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ plan.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ plan.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ plan.id }}">Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete the subscription plan <strong>{{ plan.name }}</strong>?
+                                                <p class="text-danger mt-2">
+                                                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone and may affect existing subscribers.
+                                                </p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('settings.delete_subscription', plan_id=plan.id) }}" method="POST" style="display: inline;">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No subscription plans have been created yet.
+                <a href="{{ url_for('settings.add_subscription') }}" class="alert-link">Create your first plan</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#subscriptionTable').DataTable({
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %} 

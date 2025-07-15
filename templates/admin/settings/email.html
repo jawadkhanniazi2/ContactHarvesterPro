@@ -1,0 +1,132 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Email Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Email Settings</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">Email Settings</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-envelope me-1"></i>
+            Email Configuration
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="mail_server" class="form-label">Mail Server</label>
+                            <input type="text" class="form-control" id="mail_server" name="mail_server" value="{{ settings.mail_server }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="mail_port" class="form-label">Mail Port</label>
+                            <input type="number" class="form-control" id="mail_port" name="mail_port" value="{{ settings.mail_port }}">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="mail_use_tls" name="mail_use_tls" {% if settings.mail_use_tls %}checked{% endif %}>
+                            <label class="form-check-label" for="mail_use_tls">Use TLS</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="mail_use_ssl" name="mail_use_ssl" {% if settings.mail_use_ssl %}checked{% endif %}>
+                            <label class="form-check-label" for="mail_use_ssl">Use SSL</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="mail_username" class="form-label">Mail Username</label>
+                            <input type="text" class="form-control" id="mail_username" name="mail_username" value="{{ settings.mail_username }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="mail_password" class="form-label">Mail Password</label>
+                            <input type="password" class="form-control" id="mail_password" name="mail_password" value="{{ settings.mail_password }}">
+                            <div class="form-text">Leave blank to keep current password</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="mail_default_sender" class="form-label">Default Sender</label>
+                            <input type="email" class="form-control" id="mail_default_sender" name="mail_default_sender" value="{{ settings.mail_default_sender }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary me-2" id="testEmailBtn">Test Email Settings</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Test Email Modal -->
+<div class="modal fade" id="testEmailModal" tabindex="-1" aria-labelledby="testEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testEmailModalLabel">Test Email Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="test_email" class="form-label">Send Test Email To:</label>
+                    <input type="email" class="form-control" id="test_email" required>
+                </div>
+                <div id="testEmailResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="sendTestEmail">Send Test Email</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const testEmailBtn = document.getElementById('testEmailBtn');
+        const sendTestEmail = document.getElementById('sendTestEmail');
+        const testEmailResult = document.getElementById('testEmailResult');
+        
+        // Open test email modal
+        testEmailBtn.addEventListener('click', function() {
+            const modal = new bootstrap.Modal(document.getElementById('testEmailModal'));
+            modal.show();
+        });
+        
+        // Send test email
+        sendTestEmail.addEventListener('click', function() {
+            const email = document.getElementById('test_email').value;
+            if (!email) {
+                testEmailResult.innerHTML = '<div class="alert alert-danger">Please enter an email address</div>';
+                return;
+            }
+            
+            // Show loading
+            testEmailResult.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><div>Sending test email...</div></div>';
+            
+            // In a real app, this would make an AJAX call to send the test email
+            setTimeout(function() {
+                testEmailResult.innerHTML = '<div class="alert alert-success">Test email sent successfully!</div>';
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %} 

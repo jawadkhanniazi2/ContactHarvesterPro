@@ -1,0 +1,246 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .action-btn {
+        margin-right: 5px;
+    }
+    
+    .filter-card {
+        margin-bottom: 20px;
+    }
+    
+    .filter-card .card-body {
+        padding: 15px;
+    }
+    
+    .filter-card .form-control, .filter-card .form-select {
+        font-size: 0.9rem;
+    }
+    
+    .filter-card .btn {
+        font-size: 0.9rem;
+    }
+    
+    .badge-subscription {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>User Management</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Users</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Filters -->
+<div class="card filter-card">
+    <div class="card-body">
+        <form action="{{ url_for('admin.users') }}" method="GET" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search" placeholder="Search by name, email, username..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="role">
+                    <option value="">All Roles</option>
+                    {% for role in roles %}
+                    <option value="{{ role.id }}" {% if request.args.get('role') == role.id|string %}selected{% endif %}>{{ role.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="subscription">
+                    <option value="">All Plans</option>
+                    {% for plan in subscription_plans %}
+                    <option value="{{ plan.id }}" {% if request.args.get('subscription') == plan.id|string %}selected{% endif %}>{{ plan.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Reset</a>
+                <a href="{{ url_for('admin.create_user') }}" class="btn btn-success float-end">Add User</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h6>All Users ({{ pagination.total }})</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable">
+                <thead>
+                    <tr>
+                        <th width="50">#</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Subscription</th>
+                        <th>Last Login</th>
+                        <th>Status</th>
+                        <th width="150">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ loop.index + pagination.offset }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if user.profile_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.username }}" class="user-avatar me-2">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='img/default-avatar.png') }}" alt="{{ user.username }}" class="user-avatar me-2">
+                                {% endif %}
+                                <div>
+                                    <div>{{ user.first_name }} {{ user.last_name }}</div>
+                                    <small class="text-muted">@{{ user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% for role in user.roles %}
+                            <span class="badge bg-info">{{ role.name }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if user.active_subscription %}
+                            <span class="badge bg-primary badge-subscription">{{ user.active_subscription.plan.name }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary badge-subscription">Free</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.last_login_at %}
+                            {{ user.last_login_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary action-btn" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('admin.login_as_user', user_id=user.id) }}" class="btn btn-sm btn-info action-btn" title="Login as User">
+                                <i class="fas fa-user-secret"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete the user: <strong>{{ user.username }}</strong>?</p>
+                                            <p class="text-danger">This action cannot be undone. All data associated with this user will be permanently deleted.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger">Delete User</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if pagination.page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=pagination.page-1, **request.args) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(max(1, pagination.page - 2), min(pagination.pages + 1, pagination.page + 3)) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=p, **request.args) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if pagination.page < pagination.pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=pagination.page+1, **request.args) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            "paging": false,
+            "searching": false,
+            "info": false
+        });
+    });
+</script>
+{% endblock %} 

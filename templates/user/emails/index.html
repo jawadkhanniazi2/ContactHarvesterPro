@@ -1,0 +1,220 @@
+{% extends "layouts/user_dashboard.html" %}
+
+{% block title %}My Email Collection{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">My Email Collection</h1>
+        <div>
+            <a href="{{ url_for('user.jobs') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-tasks me-1"></i> Manage Jobs
+            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('user.export_all_emails', format='csv') }}">Export as CSV</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('user.export_all_emails', format='xlsx') }}">Export as Excel</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" id="copyAllEmails">Copy all emails</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Email Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Emails</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_emails }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Valid Emails</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ valid_emails }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Unique Domains</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ unique_domains }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-globe fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emails Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">All Emails</h6>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" class="form-control" id="emailSearch" placeholder="Search emails...">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="emailsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Email Address</th>
+                            <th>Source</th>
+                            <th>Job</th>
+                            <th>Valid</th>
+                            <th>Domain</th>
+                            <th>Found Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for email in emails %}
+                        <tr>
+                            <td>{{ email.address }}</td>
+                            <td>
+                                <a href="{{ email.source_url }}" target="_blank" class="text-truncate d-inline-block" style="max-width: 200px;">
+                                    {{ email.source_url }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('user.view_job', job_id=email.job_id) }}">
+                                    {{ email.job.name }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if email.is_valid == True %}
+                                <span class="badge bg-success">Valid</span>
+                                {% elif email.is_valid == False %}
+                                <span class="badge bg-danger">Invalid</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ email.domain }}</td>
+                            <td>{{ email.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary copy-email" 
+                                    data-email="{{ email.address }}" title="Copy email">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No emails found yet. Start a scraping job to find emails!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#emailsTable').DataTable({
+            pageLength: 25,
+            order: [[5, 'desc']], // Sort by date found
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel'
+            ]
+        });
+        
+        // Custom search implementation
+        $('#emailSearch').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+        
+        // Clear search
+        $('#clearSearch').on('click', function() {
+            $('#emailSearch').val('');
+            table.search('').draw();
+        });
+
+        // Copy email functionality
+        $('.copy-email').on('click', function() {
+            const email = $(this).data('email');
+            navigator.clipboard.writeText(email).then(function() {
+                // Show tooltip
+                alert('Email copied: ' + email);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+        
+        // Copy all emails
+        $('#copyAllEmails').on('click', function(e) {
+            e.preventDefault();
+            
+            const emails = [];
+            $('#emailsTable tbody tr').each(function() {
+                const emailCell = $(this).find('td:first');
+                if (emailCell.text().includes('@')) {
+                    emails.push(emailCell.text().trim());
+                }
+            });
+            
+            if (emails.length > 0) {
+                navigator.clipboard.writeText(emails.join('\n')).then(function() {
+                    alert(`${emails.length} emails copied to clipboard!`);
+                }, function(err) {
+                    console.error('Could not copy emails: ', err);
+                });
+            } else {
+                alert('No emails to copy.');
+            }
+        });
+    });
+</script>
+{% endblock %} 

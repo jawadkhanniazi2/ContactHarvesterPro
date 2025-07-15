@@ -1,0 +1,549 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Scraping Jobs - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .job-card {
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        transition: all 0.3s;
+        margin-bottom: 1rem;
+    }
+    
+    .job-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+    }
+    
+    .progress-thin {
+        height: 0.5rem;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fc;
+    }
+    
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        margin: 0 0.125rem;
+    }
+    
+    .stats-card {
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .stats-card.success {
+        border-left-color: var(--success-color);
+    }
+    
+    .stats-card.warning {
+        border-left-color: var(--warning-color);
+    }
+    
+    .stats-card.danger {
+        border-left-color: var(--danger-color);
+    }
+    
+    .filter-card {
+        background: #f8f9fc;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .job-id {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        background: #f8f9fc;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        border: 1px solid #e3e6f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-tasks me-2"></i>Scraping Jobs Management
+        </h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" id="refreshJobs">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+            <button class="btn btn-warning" id="syncJobs">
+                <i class="fas fa-exchange-alt me-1"></i>Sync Status
+            </button>
+            <button class="btn btn-success" id="exportJobs">
+                <i class="fas fa-download me-1"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Jobs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ jobs|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Completed Jobs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ jobs|selectattr('status', 'equalto', 'completed')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                In Progress
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ jobs|selectattr('status', 'equalto', 'in_progress')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-spinner fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Failed Jobs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ jobs|selectattr('status', 'equalto', 'failed')|list|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label">Status Filter:</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="userFilter" class="form-label">User Filter:</label>
+                <select class="form-select" id="userFilter">
+                    <option value="">All Users</option>
+                    {% for job in jobs %}
+                        {% if job.user and job.user.username not in (jobs|selectattr('user')|selectattr('username')|map(attribute='username')|list) %}
+                            <option value="{{ job.user.username }}">{{ job.user.username }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="dateFilter" class="form-label">Date Range:</label>
+                <select class="form-select" id="dateFilter">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="searchFilter" class="form-label">Search:</label>
+                <input type="text" class="form-control" id="searchFilter" placeholder="Search jobs...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>All Scraping Jobs
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if jobs %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="jobsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job ID</th>
+                                <th>User</th>
+                                <th>URLs</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Emails Found</th>
+                                <th>Created</th>
+                                <th>Completed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr data-job-id="{{ job.job_id }}" 
+                                data-status="{{ job.status }}" 
+                                data-user="{{ job.user.username if job.user else 'Anonymous' }}"
+                                data-created="{{ job.created_at.strftime('%Y-%m-%d') }}">
+                                <td>
+                                    <span class="job-id">{{ job.job_id[:12] }}...</span>
+                                </td>
+                                <td>
+                                    {% if job.user %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 32px; height: 32px; font-size: 14px;">
+                                                {{ job.user.username[0]|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ job.user.username }}</div>
+                                                <small class="text-muted">{{ job.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">Anonymous</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">{{ job.total_urls }}</span>
+                                        <small class="text-muted">
+                                            {% if job.successful_urls %}
+                                                {{ job.successful_urls }} successful
+                                            {% else %}
+                                                Processing...
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if job.status == 'completed' %}
+                                        <span class="badge bg-success status-badge">
+                                            <i class="fas fa-check me-1"></i>Completed
+                                        </span>
+                                    {% elif job.status == 'in_progress' %}
+                                        <span class="badge bg-warning status-badge">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>In Progress
+                                        </span>
+                                    {% elif job.status == 'failed' %}
+                                        <span class="badge bg-danger status-badge">
+                                            <i class="fas fa-times me-1"></i>Failed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary status-badge">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set progress = ((job.successful_urls / job.total_urls) * 100) if job.total_urls > 0 else 0 %}
+                                    <div class="progress progress-thin" style="height: 8px;">
+                                        <div class="progress-bar 
+                                            {% if job.status == 'completed' %}bg-success
+                                            {% elif job.status == 'failed' %}bg-danger
+                                            {% else %}bg-warning{% endif %}" 
+                                            role="progressbar" 
+                                            style="width: {{ progress }}%"
+                                            aria-valuenow="{{ progress }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.1f"|format(progress) }}%</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-success">
+                                            {{ job.emails_found if job.emails_found else 0 }}
+                                        </span>
+                                        <small class="text-muted">emails</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span>{{ job.created_at.strftime('%Y-%m-%d') }}</span>
+                                        <small class="text-muted">{{ job.created_at.strftime('%H:%M') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if job.completed_at %}
+                                        <div class="d-flex flex-column">
+                                            <span>{{ job.completed_at.strftime('%Y-%m-%d') }}</span>
+                                            <small class="text-muted">{{ job.completed_at.strftime('%H:%M') }}</small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('scrape.view_job', job_id=job.job_id) }}" 
+                                           class="btn btn-outline-primary btn-action" 
+                                           title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if job.status == 'completed' and job.result_file %}
+                                            <a href="{{ url_for('scrape.download_job', job_id=job.job_id) }}" 
+                                               class="btn btn-outline-success btn-action" 
+                                               title="Download Results">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        {% endif %}
+                                        <button type="button" 
+                                                class="btn btn-outline-danger btn-action delete-job-btn" 
+                                                data-job-id="{{ job.job_id }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteJobModal"
+                                                title="Delete Job">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                    <h4 class="text-gray-600">No Scraping Jobs Found</h4>
+                    <p class="text-gray-500">No scraping jobs have been created yet. Users can create jobs from the main dashboard.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Job Modal -->
+<div class="modal fade" id="deleteJobModal" tabindex="-1" aria-labelledby="deleteJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteJobModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Job
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this scraping job? This action cannot be undone.</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Warning:</strong> This will also delete any associated result files.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteJobForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Job
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    const table = $('#jobsTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[6, 'desc']], // Sort by created date
+        columnDefs: [
+            { orderable: false, targets: [8] } // Disable sorting for actions column
+        ],
+        language: {
+            search: "",
+            searchPlaceholder: "Search jobs...",
+            emptyTable: "No jobs found matching your criteria"
+        },
+        dom: 'rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        drawCallback: function() {
+            // Re-bind event handlers after table redraw
+            bindDeleteHandlers();
+        }
+    });
+
+    // Custom search functionality
+    $('#searchFilter').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+
+    // Status filter
+    $('#statusFilter').on('change', function() {
+        const status = this.value;
+        if (status === '') {
+            table.column(3).search('').draw();
+        } else {
+            table.column(3).search(status).draw();
+        }
+    });
+
+    // User filter
+    $('#userFilter').on('change', function() {
+        const user = this.value;
+        if (user === '') {
+            table.column(1).search('').draw();
+        } else {
+            table.column(1).search(user).draw();
+        }
+    });
+
+    // Date filter
+    $('#dateFilter').on('change', function() {
+        const range = this.value;
+        const today = new Date();
+        let filterDate = null;
+
+        switch(range) {
+            case 'today':
+                filterDate = today.toISOString().split('T')[0];
+                break;
+            case 'week':
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filterDate = weekAgo.toISOString().split('T')[0];
+                break;
+            case 'month':
+                const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                filterDate = monthAgo.toISOString().split('T')[0];
+                break;
+        }
+
+        if (filterDate) {
+            // Custom search function for date range
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const createdDate = data[6]; // Created date column
+                const rowDate = new Date(createdDate);
+                const compareDate = new Date(filterDate);
+                
+                return rowDate >= compareDate;
+            });
+        } else {
+            // Clear custom search
+            $.fn.dataTable.ext.search.pop();
+        }
+        
+        table.draw();
+    });
+
+    // Refresh jobs
+    $('#refreshJobs').on('click', function() {
+        location.reload();
+    });
+
+    // Sync job statuses
+    $('#syncJobs').on('click', function() {
+        const $btn = $(this);
+        const originalText = $btn.html();
+        
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Syncing...');
+        
+        $.ajax({
+            url: '/api/admin/sync-jobs',
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    alert(`Sync completed!\nFixed ${response.fixed_count} out of ${response.total_stuck_jobs} stuck jobs.\n\nMessages:\n${response.messages.join('\n')}`);
+                    location.reload(); // Refresh to show updated statuses
+                } else {
+                    alert('Sync failed: ' + (response.error || 'Unknown error'));
+                }
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'Network error';
+                alert('Sync failed: ' + errorMsg);
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
+    // Export jobs
+    $('#exportJobs').on('click', function() {
+        // Add export functionality here
+        alert('Export functionality would be implemented here');
+    });
+
+    // Delete job handlers
+    function bindDeleteHandlers() {
+        $('.delete-job-btn').off('click').on('click', function() {
+            const jobId = $(this).data('job-id');
+            const form = document.getElementById('deleteJobForm');
+            form.action = `/admin/scrape/jobs/delete/${jobId}`;
+        });
+    }
+
+    // Initial binding
+    bindDeleteHandlers();
+
+    // Auto-refresh for in-progress jobs (every 30 seconds)
+    setInterval(function() {
+        const inProgressJobs = document.querySelectorAll('[data-status="in_progress"]');
+        if (inProgressJobs.length > 0) {
+            // Only refresh if there are in-progress jobs
+            location.reload();
+        }
+    }, 30000);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,9 @@
+google.com
+microsoft.com
+apple.com
+amazon.com
+facebook.com
+https://example.com
+https://python.org
+https://stackoverflow.com
+https://github.com

@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContactHound | Professional Email & Contact Finder</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #5540af;
+            --primary-dark: #4330a7;
+            --primary-light: #6b5cd8;
+            --secondary: #ff6b6b;
+            --secondary-dark: #ff5252;
+            --accent: #00c2a8;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            --white: #ffffff;
+            --black: #000000;
+            --success: #28a745;
+            --info: #17a2b8;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafc;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+        }
+        
+        .display-1 {
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-alt {
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Navigation */
+        .navbar {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background-color: var(--white);
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .navbar .nav-link {
+            font-weight: 600;
+            color: var(--gray-700);
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+        
+        .navbar .nav-link:hover {
+            color: var(--primary);
+        }
+        
+        .navbar .nav-item.active .nav-link {
+            color: var(--primary);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(85, 64, 175, 0.25);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(85, 64, 175, 0.3);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(255, 107, 107, 0.25);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            border-color: var(--success);
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            padding: 6rem 0;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(85, 64, 175, 0.05) 0%, rgba(85, 64, 175, 0.2) 100%);
+            clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%);
+            z-index: -1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            padding-top: 8px;
+        }
+        
+        .floating-label {
+            position: absolute;
+            top: -14px;
+            left: 12px;
+            background: white;
+            padding: 0 10px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            z-index: 10;
+            line-height: 1.2;
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 1);
+        }
+        
+        .tab-control {
+            display: flex;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: var(--gray-200);
+            margin-bottom: 2rem;
+        }
+        
+        .tab-control .tab {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-control .tab.active {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+        
+        .option-card {
+            border: 1px solid var(--gray-300);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .option-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .option-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            font-size: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* Features */
+        .feature-card {
+            border-radius: 12px;
+            padding: 2rem;
+            height: 100%;
+            transition: all 0.3s;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            color: white;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+        
+        .feature-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        /* Testimonials */
+        .testimonial-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .testimonial-card:before {
+            content: """;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 5rem;
+            color: var(--gray-200);
+            font-family: serif;
+            line-height: 1;
+        }
+        
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+        
+        /* Progress */
+        .progress {
+            height: 0.8rem;
+            border-radius: 1rem;
+            background-color: var(--gray-200);
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 1rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #f9fafc;
+            border-top: 1px solid var(--gray-200);
+            padding: 5rem 0 2rem;
+        }
+        
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-list li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .footer-list a {
+            color: var(--gray-600);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .footer-list a:hover {
+            color: var(--primary);
+        }
+        
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+            margin-right: 0.75rem;
+            transition: all 0.3s;
+        }
+        
+        .social-icon:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        /* Utilities */
+        .shadow-lg {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        }
+        
+        .rounded-lg {
+            border-radius: 12px !important;
+        }
+        
+        .text-primary {
+            color: var(--primary) !important;
+        }
+        
+        .bg-primary-light {
+            background-color: rgba(85, 64, 175, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* Animated elements */
+        .floating-icon {
+            position: absolute;
+            animation: float 3s ease-in-out infinite;
+            z-index: -1;
+            opacity: 0.7;
+        }
+        
+        .floating-icon-1 {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-icon-2 {
+            top: 20%;
+            right: 15%;
+            animation-delay: 0.5s;
+        }
+        
+        .floating-icon-3 {
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 1s;
+        }
+        
+        .floating-icon-4 {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 1.5s;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+        
+        .hero-image-container {
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        .hero-image {
+            transform: rotateY(-10deg);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s;
+            border: 8px solid white;
+        }
+        
+        .hero-image:hover {
+            transform: rotateY(0deg);
+        }
+        
+        .hero-bg {
+            background: linear-gradient(45deg, rgba(85, 64, 175, 0.05) 0%, rgba(85, 64, 175, 0.2) 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-search-location me-2"></i>ContactHound
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#"><i class="fas fa-home me-1"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features"><i class="fas fa-star me-1"></i>Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing"><i class="fas fa-tag me-1"></i>Pricing</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin() %}
+                        <a class="btn btn-outline-primary me-2" href="/admin/dashboard">
+                            <i class="fas fa-chart-line me-1"></i>Dashboard
+                        </a>
+                        {% else %}
+                        <a class="btn btn-outline-primary me-2" href="/user/dashboard">
+                            <i class="fas fa-user-cog me-1"></i>My Account
+                        </a>
+                        {% endif %}
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hidden admin access link (not visible in UI) -->
+    <a href="/admin" style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; overflow: hidden;">Admin</a>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-bg"></div>
+        <div class="floating-icon floating-icon-1">
+            <i class="fas fa-envelope fa-3x text-primary-light"></i>
+        </div>
+        <div class="floating-icon floating-icon-2">
+            <i class="fas fa-phone fa-2x text-secondary"></i>
+        </div>
+        <div class="floating-icon floating-icon-3">
+            <i class="fas fa-globe fa-2x text-accent"></i>
+        </div>
+        <div class="floating-icon floating-icon-4">
+            <i class="fas fa-at fa-3x text-primary"></i>
+        </div>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <h1 class="hero-title">
+                        Find <span class="text-gradient">Email Addresses</span> & Contact Info from Any Website
+                    </h1>
+                    <p class="hero-subtitle">
+                        ContactHound helps you discover contact information from websites to connect with potential clients and partners. Save hours of manual searching with our powerful extraction tool.
+                    </p>
+                    <a href="#scraper" class="btn btn-primary btn-lg me-3 pulse-animation">
+                        <i class="fas fa-search me-2"></i>Start Searching
+                    </a>
+                    <a href="#features" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image-container">
+                        <img src="https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" class="img-fluid rounded-lg shadow-lg hero-image" alt="ContactHound">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="container py-5" id="scraper">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-lg mb-5">
+                    <div class="card-header bg-white">
+                        <h3 class="mb-0 text-center">
+                            <i class="fas fa-search text-primary me-2"></i>Extract Contact Information
+                        </h3>
+                        <p class="text-center text-muted mt-2 mb-0">Find email addresses, phone numbers and social profiles from any website</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Tabs Control -->
+                        <div class="tab-control">
+                            <div class="tab active" id="singleTab" onclick="switchTab('single')">
+                                <i class="fas fa-globe me-2"></i>Single Website
+                            </div>
+                            <div class="tab" id="multipleTab" onclick="switchTab('multiple')">
+                                <i class="fas fa-layer-group me-2"></i>Multiple Websites
+                            </div>
+                            <div class="tab" id="fileTab" onclick="switchTab('file')">
+                                <i class="fas fa-file-upload me-2"></i>File Upload
+                            </div>
+                        </div>
+
+                        <!-- Single URL Form -->
+                        <div id="singleForm">
+                            <div class="option-card">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="option-icon">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h4 class="mb-0">Single Website</h4>
+                                        <p class="text-muted mb-0">Extract contact information from a specific website</p>
+                                    </div>
+                                </div>
+                                
+                                {% if not current_user.is_authenticated %}
+                                <!-- Guest User Notice -->
+                                <div class="alert alert-warning border-0 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-clock me-2"></i>
+                                        <div class="small">
+                                            <strong>Guest access:</strong> Limited to 10 URLs per batch
+                                            <br><a href="{{ url_for('auth.register') }}" class="text-decoration-none">Register for free</a> to get 50 URLs per batch!
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="input-wrapper mt-4">
+                                    <span class="floating-label">Website URL</span>
+                                    <div class="input-group mt-2">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-globe text-primary"></i>
+                                        </span>
+                                        <input type="url" class="form-control border-start-0 ps-0 form-control-lg" id="urlInput" placeholder="https://example.com">
+                                    </div>
+                                    <div class="form-text mt-2">Enter any website URL to extract contact information</div>
+                                </div>
+                                <button type="button" id="scrapeButton" class="btn btn-primary btn-lg w-100 mt-3">
+                                    <i class="fas fa-search me-2"></i>Find Contact Information
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Multiple URLs Form -->
+                        <div id="multipleForm" style="display: none;">
+                            <div class="option-card">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="option-icon">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h4 class="mb-0">Multiple Websites</h4>
+                                        <p class="text-muted mb-0">Enter multiple websites to scan all at once</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- URL Limit Information -->
+                                <div class="alert alert-info border-0 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <div class="small">
+                                            <strong>Your current limit:</strong> {{ get_user_limit() }} URLs per batch
+                                            <span class="text-muted">({{ get_limit_description() }})</span>
+                                            {% if not current_user.is_authenticated %}
+                                                <br><a href="{{ url_for('auth.register') }}" class="text-decoration-none">Register for free</a> to get 50 URLs per batch!
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-wrapper mt-4">
+                                    <span class="floating-label">Enter Multiple URLs</span>
+                                    <textarea class="form-control form-control-lg mt-2" id="bulkUrlInput" rows="6" placeholder="https://example1.com&#10;https://example2.com&#10;https://example3.com"></textarea>
+                                    <div class="form-text mt-2">
+                                        Enter one URL per line (max {{ get_user_limit() }} websites)
+                                        <span id="urlCount" class="text-muted ms-2"></span>
+                                    </div>
+                                </div>
+                                <button type="button" id="multipleScrapeButton" class="btn btn-primary btn-lg w-100 mt-3">
+                                    <i class="fas fa-search me-2"></i>Find Contact Information
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Form -->
+                        <div id="fileForm" style="display: none;">
+                            <div class="option-card">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="option-icon">
+                                        <i class="fas fa-file-upload"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h4 class="mb-0">Upload File</h4>
+                                        <p class="text-muted mb-0">Import websites from a file</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- URL Limit Information -->
+                                <div class="alert alert-info border-0 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <div class="small">
+                                            <strong>Your current limit:</strong> {{ get_user_limit() }} URLs per file
+                                            <span class="text-muted">({{ get_limit_description() }})</span>
+                                            {% if not current_user.is_authenticated %}
+                                                <br><a href="{{ url_for('auth.register') }}" class="text-decoration-none">Register for free</a> to get 50 URLs per file!
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-wrapper mt-4">
+                                    <span class="floating-label">Select File</span>
+                                    <div class="input-group mt-2">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-file-alt text-primary"></i>
+                                        </span>
+                                        <input class="form-control border-start-0 ps-0 form-control-lg" type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls">
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        Upload a CSV, TXT, or Excel file containing URLs (one per line or in the first column)
+                                        <br><strong>Max {{ get_user_limit() }} URLs per file</strong>
+                                    </div>
+                                </div>
+                                <button type="button" id="uploadButton" class="btn btn-primary btn-lg w-100 mt-3">
+                                    <i class="fas fa-upload me-2"></i>Upload & Process
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" style="display: none;">
+                    <div class="card shadow-lg">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                            <div>
+                                <i class="fas fa-table text-primary me-2"></i>
+                                <h4 class="d-inline mb-0">Results</h4>
+                            </div>
+                            <button id="downloadButton" class="btn btn-success">
+                                <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div id="progressContainer" class="mb-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <label id="progressLabel" class="form-label fw-bold">Processing your request...</label>
+                                    <span id="progressPercent" class="badge bg-primary rounded-pill">0%</span>
+                                </div>
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div id="resultsContainer">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="container py-5 mb-5" id="features">
+        <div class="text-center mb-5">
+            <span class="badge rounded-pill bg-primary-light text-primary px-3 py-2 mb-2">Features</span>
+            <h2 class="display-5 fw-bold mb-3">Why Choose ContactHound?</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">Our powerful features are designed to save you time and maximize your lead generation efforts.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="text-muted">Our advanced algorithms can process websites in seconds, saving you valuable time in your outreach efforts.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Deep Scanning</h3>
+                    <p class="text-muted">We can find hidden and protected email addresses that other tools miss using our proprietary technologies.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-export"></i>
+                    </div>
+                    <h3 class="feature-title">Export Ready</h3>
+                    <p class="text-muted">Download your results in Excel format for seamless integration with your CRM and marketing tools.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="bg-light py-5 mb-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="badge rounded-pill bg-primary-light text-primary px-3 py-2 mb-2">Testimonials</span>
+                <h2 class="display-5 fw-bold mb-3">What Our Clients Say</h2>
+                <p class="text-muted mx-auto" style="max-width: 600px;">Don't take our word for it - here's what our clients have to say about ContactHound.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <p class="mb-4">"ContactHound has revolutionized our lead generation process. We're saving at least 10 hours per week on manual research."</p>
+                        <div class="d-flex align-items-center">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Client" class="testimonial-avatar">
+                            <div>
+                                <h5 class="mb-0">Michael Thomson</h5>
+                                <p class="text-muted mb-0">Marketing Director, TechFlow</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <p class="mb-4">"I was skeptical at first, but this tool finds emails that were impossible to discover before. It's worth every penny."</p>
+                        <div class="d-flex align-items-center">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Client" class="testimonial-avatar">
+                            <div>
+                                <h5 class="mb-0">Sarah Johnson</h5>
+                                <p class="text-muted mb-0">Sales Manager, GrowBiz</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <p class="mb-4">"The bulk upload feature is a game-changer for our agency. We can process hundreds of domains with just a few clicks."</p>
+                        <div class="d-flex align-items-center">
+                            <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="Client" class="testimonial-avatar">
+                            <div>
+                                <h5 class="mb-0">David Martinez</h5>
+                                <p class="text-muted mb-0">CEO, LeadGenPro</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h5 class="navbar-brand mb-4">
+                        <i class="fas fa-search-location me-2"></i>ContactHound
+                    </h5>
+                    <p class="text-muted">Find contact information from websites with our powerful extraction tool. Save hours of manual searching and connect with potential clients.</p>
+                    <div class="mt-4">
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
+                    <h6 class="footer-title">Company</h6>
+                    <ul class="footer-list">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
+                    <h6 class="footer-title">Resources</h6>
+                    <ul class="footer-list">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">API</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h6 class="footer-title">Stay Updated</h6>
+                    <p class="text-muted">Subscribe to our newsletter for tips, updates, and offers.</p>
+                    <div class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Your email address">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-muted">&copy; 2023 ContactHound. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="#" class="text-muted">Privacy Policy</a></li>
+                        <li class="list-inline-item">•</li>
+                        <li class="list-inline-item"><a href="#" class="text-muted">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application JS -->
+    <script>
+        // Tab switching functionality
+        function switchTab(tab) {
+            // Remove active class from all tabs
+            document.getElementById('singleTab').classList.remove('active');
+            document.getElementById('multipleTab').classList.remove('active');
+            document.getElementById('fileTab').classList.remove('active');
+            
+            // Hide all forms
+            document.getElementById('singleForm').style.display = 'none';
+            document.getElementById('multipleForm').style.display = 'none';
+            document.getElementById('fileForm').style.display = 'none';
+            
+            // Activate the selected tab
+            if (tab === 'single') {
+                document.getElementById('singleTab').classList.add('active');
+                document.getElementById('singleForm').style.display = 'block';
+            } else if (tab === 'multiple') {
+                document.getElementById('multipleTab').classList.add('active');
+                document.getElementById('multipleForm').style.display = 'block';
+            } else if (tab === 'file') {
+                document.getElementById('fileTab').classList.add('active');
+                document.getElementById('fileForm').style.display = 'block';
+            }
+        }
+
+        // JavaScript for handling the scraping functionality
+        document.getElementById('scrapeButton').addEventListener('click', function() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+            
+            processSingleURL(url);
+        });
+        
+        // URL counting and validation for multiple URLs
+        document.getElementById('bulkUrlInput').addEventListener('input', function() {
+            const urls = this.value.split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+            
+            const urlCount = urls.length;
+            const maxUrls = {{ get_user_limit() }};
+            const countElement = document.getElementById('urlCount');
+            
+            if (urlCount > 0) {
+                if (urlCount > maxUrls) {
+                    countElement.innerHTML = `<span class="text-danger">${urlCount}/${maxUrls} URLs (exceeds limit)</span>`;
+                } else {
+                    countElement.innerHTML = `<span class="text-success">${urlCount}/${maxUrls} URLs</span>`;
+                }
+            } else {
+                countElement.innerHTML = '';
+            }
+        });
+
+        document.getElementById('multipleScrapeButton').addEventListener('click', function() {
+            const bulkUrlInput = document.getElementById('bulkUrlInput').value.trim();
+            const maxUrls = {{ get_user_limit() }};
+            
+            if (bulkUrlInput === '') {
+                alert('Please enter at least one URL');
+                return;
+            }
+            
+            // Process URLs from textarea
+            const urls = bulkUrlInput.split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+            
+            if (urls.length === 0) {
+                alert('Please enter at least one valid URL');
+                return;
+            }
+            
+            if (urls.length > maxUrls) {
+                alert(`You can only process up to ${maxUrls} URLs at once. Please reduce the number of URLs or upgrade your account.`);
+                return;
+            }
+            
+            processMultipleURLs(urls);
+        });
+        
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            
+            if (!fileInput.files.length) {
+                alert('Please select a file');
+                return;
+            }
+            
+            processFileUpload(fileInput.files[0]);
+        });
+        
+        function processSingleURL(url) {
+            // Show results section and scroll to it
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = '<div class="d-flex align-items-center justify-content-center py-5"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"><span class="visually-hidden">Loading...</span></div><p class="lead mb-0">Processing your request...</p></div></div>';
+            
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Call API endpoint for manual scraping
+            fetch('/api/manual', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    urls: [url]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.job_id) {
+                    checkJobStatus(data.job_id);
+                } else {
+                    showError('Failed to start job: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showError('Error: ' + error);
+            });
+        }
+        
+        function processMultipleURLs(urls) {
+            // Show results section and scroll to it
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = '<div class="d-flex align-items-center justify-content-center py-5"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"><span class="visually-hidden">Loading...</span></div><p class="lead mb-0">Processing your request...</p></div></div>';
+            
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Call API endpoint for manual scraping
+            fetch('/api/manual', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    urls: urls
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.job_id) {
+                    checkJobStatus(data.job_id);
+                } else {
+                    showError('Failed to start job: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showError('Error: ' + error);
+            });
+        }
+        
+        function processFileUpload(file) {
+            // Create FormData object for file upload
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Show results section and scroll to it
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = '<div class="d-flex align-items-center justify-content-center py-5"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"><span class="visually-hidden">Loading...</span></div><p class="lead mb-0">Uploading and processing your file...</p></div></div>';
+            
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Call API endpoint for file upload
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.job_id) {
+                    checkJobStatus(data.job_id);
+                } else {
+                    showError('Failed to upload file: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showError('Error: ' + error);
+            });
+        }
+        
+        function checkJobStatus(jobId) {
+            const intervalId = setInterval(() => {
+                fetch(`/api/jobs/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update progress
+                    const progress = data.progress || 0;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressLabel').textContent = `Processing your request...`;
+                    document.getElementById('progressPercent').textContent = `${progress}%`;
+                    
+                    if (data.status === 'completed') {
+                        clearInterval(intervalId);
+                        document.getElementById('progressLabel').textContent = 'Processing complete!';
+                        document.getElementById('progressPercent').textContent = '100%';
+                        document.getElementById('progressBar').classList.remove('progress-bar-animated');
+                        document.getElementById('progressBar').classList.add('bg-success');
+                        fetchAndDisplayResults(jobId);
+                        
+                        // Enable download button
+                        const downloadButton = document.getElementById('downloadButton');
+                        downloadButton.disabled = false;
+                        downloadButton.addEventListener('click', function() {
+                            window.location.href = `/api/download/${jobId}`;
+                        });
+                    } else if (data.status === 'error') {
+                        clearInterval(intervalId);
+                        showError('Error: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    clearInterval(intervalId);
+                    showError('Error checking job status: ' + error);
+                });
+            }, 1000);
+        }
+        
+        function fetchAndDisplayResults(jobId) {
+            fetch(`/api/results/${jobId}`)
+            .then(response => response.json())
+            .then(data => {
+                const results = data.results || [];
+                displayResults(results);
+            })
+            .catch(error => {
+                showError('Error fetching results: ' + error);
+            });
+        }
+        
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            if (!results.length) {
+                container.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No results found. The website may not have any publicly accessible contact information.</div>';
+                return;
+            }
+            
+            let html = '<div class="table-responsive">';
+            html += '<table class="table table-hover">';
+            html += '<thead class="table-light"><tr><th>Website</th><th>Emails</th><th>Phone Numbers</th><th>Social Media</th></tr></thead>';
+            html += '<tbody>';
+            
+            results.forEach(result => {
+                const emails = Array.isArray(result.emails) ? result.emails.join('<br>') : '';
+                const phones = Array.isArray(result.phones) ? result.phones.join('<br>') : '';
+                
+                // Format social media links
+                let socialHtml = '';
+                if (result.social_media) {
+                    const social = result.social_media;
+                    if (social.linkedin) socialHtml += `<a href="${social.linkedin}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>`;
+                    if (social.twitter) socialHtml += `<a href="${social.twitter}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Twitter"><i class="fab fa-twitter"></i></a>`;
+                    if (social.facebook) socialHtml += `<a href="${social.facebook}" target="_blank" class="btn btn-sm btn-outline-primary" title="Facebook"><i class="fab fa-facebook-f"></i></a>`;
+                }
+                
+                html += `<tr>
+                    <td><a href="${result.url}" target="_blank" class="fw-bold text-decoration-none">${result.domain || result.url}</a></td>
+                    <td>${emails || '<span class="text-muted fst-italic">None found</span>'}</td>
+                    <td>${phones || '<span class="text-muted fst-italic">None found</span>'}</td>
+                    <td>${socialHtml || '<span class="text-muted fst-italic">None found</span>'}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            
+            // Add summary
+            html += `<div class="alert alert-success mt-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white rounded-circle p-2 me-3">
+                        <i class="fas fa-check text-success"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">Search Complete</h5>
+                        <p class="mb-0">Found <strong>${countTotalEmails(results)}</strong> email addresses across <strong>${results.length}</strong> results.</p>
+                    </div>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+        }
+        
+        function countTotalEmails(results) {
+            let count = 0;
+            results.forEach(result => {
+                if (Array.isArray(result.emails)) {
+                    count += result.emails.length;
+                }
+            });
+            return count;
+        }
+        
+        function showError(message) {
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Error Occurred</h5>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
+        

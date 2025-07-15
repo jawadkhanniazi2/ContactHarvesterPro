@@ -1,0 +1,241 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Backup & Restore{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Backup & Restore</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">Backup & Restore</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Create Backup -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-download me-2"></i>Create Backup
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Create a complete backup of your application data including users, settings, and content.</p>
+                    
+                    <form action="{{ url_for('settings.create_backup') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="backup_name" class="form-label">Backup Name</label>
+                            <input type="text" class="form-control" id="backup_name" name="backup_name" 
+                                   value="backup_{{ now.strftime('%Y%m%d_%H%M%S') }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Include:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_users" name="include_users" checked>
+                                <label class="form-check-label" for="include_users">Users & Roles</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_settings" name="include_settings" checked>
+                                <label class="form-check-label" for="include_settings">Site Settings</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_content" name="include_content" checked>
+                                <label class="form-check-label" for="include_content">Blog Posts & Pages</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_jobs" name="include_jobs" checked>
+                                <label class="form-check-label" for="include_jobs">Scraping Jobs</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_files" name="include_files">
+                                <label class="form-check-label" for="include_files">Uploaded Files</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Create Backup
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restore Backup -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Restore Backup
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Restoring a backup will overwrite existing data. Make sure to create a backup before proceeding.
+                    </div>
+                    
+                    <form action="{{ url_for('settings.restore_backup') }}" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="backup_file" class="form-label">Select Backup File</label>
+                            <input type="file" class="form-control" id="backup_file" name="backup_file" 
+                                   accept=".zip,.tar,.tar.gz" required>
+                            <div class="form-text">Supported formats: ZIP, TAR, TAR.GZ</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirm_restore" name="confirm_restore" required>
+                                <label class="form-check-label" for="confirm_restore">
+                                    I understand that this will overwrite existing data
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-upload me-2"></i>Restore Backup
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup History -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i>Backup History
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if backups %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backup in backups %}
+                            <tr>
+                                <td>{{ backup.name }}</td>
+                                <td>{{ backup.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ backup.size_mb }}MB</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if backup.status == 'completed' else 'warning' }}">
+                                        {{ backup.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if backup.status == 'completed' %}
+                                            <a href="{{ url_for('settings.download_backup', backup_id=backup.id) }}" 
+                                               class="btn btn-outline-primary" title="Download">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ backup.id }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ backup.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete the backup "{{ backup.name }}"?
+                                                    <p class="text-danger mt-2">This action cannot be undone.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('settings.delete_backup', backup_id=backup.id) }}" method="POST" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Sample backup history for demonstration -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>backup_20241201_143022</td>
+                                <td>2024-12-01 14:30:22</td>
+                                <td>25.3MB</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>backup_20241130_090015</td>
+                                <td>2024-11-30 09:00:15</td>
+                                <td>23.8MB</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

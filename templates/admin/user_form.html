@@ -1,0 +1,361 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ 'Edit' if user else 'Create New' }} User{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-image-wrapper {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        overflow: hidden;
+        position: relative;
+        border: 3px solid #e3e6f0;
+    }
+    
+    .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-image-upload {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 8px;
+        text-align: center;
+        color: white;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .role-checkbox {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .form-card {
+        margin-bottom: 30px;
+    }
+    
+    .form-card .card-header {
+        padding: 0.75rem 1.25rem;
+    }
+    
+    .submit-buttons {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>{{ 'Edit' if user else 'Create New' }} User</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}">Users</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ 'Edit' if user else 'Create New' }}</li>
+        </ol>
+    </nav>
+</div>
+
+<form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.update_user', user_id=user.id) if user else url_for('admin.create_user') }}">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- User Profile Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h6>User Profile</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="profile-image-wrapper">
+                        {% if user and user.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.username }}" class="profile-image" id="profileImagePreview">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='img/default-avatar.png') }}" alt="Default Avatar" class="profile-image" id="profileImagePreview">
+                        {% endif %}
+                        <label for="profileImage" class="profile-image-upload">
+                            <i class="fas fa-camera"></i> Change Photo
+                        </label>
+                        <input type="file" name="profile_image" id="profileImage" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username if user else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email if user else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ 'New Password' if user else 'Password' }}</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               {% if not user %}required minlength="8"{% endif %}>
+                        {% if user %}
+                        <small class="form-text text-muted">Leave blank to keep current password</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Roles Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h6>User Roles</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Assign Roles</label>
+                        <div>
+                            {% for role in roles %}
+                            <div class="form-check form-check-inline role-checkbox">
+                                <input class="form-check-input" type="checkbox" name="roles" value="{{ role.id }}" id="role{{ role.id }}"
+                                       {% if user and role in user.roles %}checked{% endif %}>
+                                <label class="form-check-label" for="role{{ role.id }}">{{ role.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- User Details Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h6>User Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name if user else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name if user else '' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone if user else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="company" class="form-label">Company</label>
+                            <input type="text" class="form-control" id="company" name="company" value="{{ user.company if user else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3">{{ user.address if user else '' }}</textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" value="{{ user.city if user else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="state" class="form-label">State/Province</label>
+                            <input type="text" class="form-control" id="state" name="state" value="{{ user.state if user else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="zip_code" class="form-label">ZIP / Postal Code</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" value="{{ user.zip_code if user else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <select class="form-select" id="country" name="country">
+                            <option value="">Select Country</option>
+                            {% for code, name in countries %}
+                            <option value="{{ code }}" {% if user and user.country == code %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Subscription Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h6>Subscription</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="subscription_plan" class="form-label">Subscription Plan</label>
+                            <select class="form-select" id="subscription_plan" name="subscription_plan">
+                                <option value="">Free (No subscription)</option>
+                                {% for plan in subscription_plans %}
+                                <option value="{{ plan.id }}" 
+                                        {% if user and user.active_subscription and user.active_subscription.plan_id == plan.id %}selected{% endif %}>
+                                    {{ plan.name }} ({{ plan.price|format_price }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="subscription_status" class="form-label">Status</label>
+                            <select class="form-select" id="subscription_status" name="subscription_status" 
+                                    {% if not user or not user.active_subscription %}disabled{% endif %}>
+                                <option value="active" {% if user and user.active_subscription and user.active_subscription.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="canceled" {% if user and user.active_subscription and user.active_subscription.status == 'canceled' %}selected{% endif %}>Canceled</option>
+                                <option value="expired" {% if user and user.active_subscription and user.active_subscription.status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="subscription_start" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="subscription_start" name="subscription_start" 
+                                   value="{{ user.active_subscription.start_date.strftime('%Y-%m-%d') if user and user.active_subscription else '' }}"
+                                   {% if not user or not user.active_subscription %}disabled{% endif %}>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="subscription_end" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="subscription_end" name="subscription_end" 
+                                   value="{{ user.active_subscription.end_date.strftime('%Y-%m-%d') if user and user.active_subscription else '' }}"
+                                   {% if not user or not user.active_subscription %}disabled{% endif %}>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Settings Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h6>Account Settings</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" 
+                                       {% if not user or user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Account Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="email_verified" name="email_verified" 
+                                       {% if user and user.email_verified %}checked{% endif %}>
+                                <label class="form-check-label" for="email_verified">Email Verified</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="enable_2fa" name="enable_2fa" 
+                                       {% if user and user.enable_2fa %}checked{% endif %}>
+                                <label class="form-check-label" for="enable_2fa">Two-Factor Authentication</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="marketing_emails" name="marketing_emails" 
+                                       {% if not user or user.marketing_emails %}checked{% endif %}>
+                                <label class="form-check-label" for="marketing_emails">Marketing Emails</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Buttons -->
+            <div class="submit-buttons">
+                <button type="submit" class="btn btn-primary me-2">{{ 'Update User' if user else 'Create User' }}</button>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Cancel</a>
+                
+                {% if user %}
+                <div class="float-end">
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                        Delete User
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if user %}
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user: <strong>{{ user.username }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone. All data associated with this user will be permanently deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger">Delete User</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Profile Image Preview
+        $('#profileImage').change(function() {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profileImagePreview').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        // Toggle Subscription Fields
+        $('#subscription_plan').change(function() {
+            const hasPlan = $(this).val() !== '';
+            $('#subscription_status, #subscription_start, #subscription_end').prop('disabled', !hasPlan);
+            
+            if (hasPlan) {
+                const today = new Date();
+                const startDate = today.toISOString().split('T')[0];
+                
+                // Set end date to one month later by default
+                today.setMonth(today.getMonth() + 1);
+                const endDate = today.toISOString().split('T')[0];
+                
+                if (!$('#subscription_start').val()) {
+                    $('#subscription_start').val(startDate);
+                }
+                
+                if (!$('#subscription_end').val()) {
+                    $('#subscription_end').val(endDate);
+                }
+                
+                $('#subscription_status').val('active');
+            }
+        });
+    });
+</script>
+{% endblock %} 

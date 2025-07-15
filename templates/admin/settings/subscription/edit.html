@@ -1,0 +1,190 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Edit Subscription Plan{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Edit Subscription Plan</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.subscription') }}">Subscription Plans</a></li>
+        <li class="breadcrumb-item active">Edit Plan</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            Edit Subscription Plan
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('settings.update_subscription', plan_id=plan.id) }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Plan Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required value="{{ plan.name }}" placeholder="e.g. Basic, Pro, Enterprise">
+                            <div class="form-text">Choose a descriptive name for this subscription plan.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="stripe_plan_id" class="form-label">Stripe Plan ID</label>
+                            <input type="text" class="form-control" id="stripe_plan_id" name="stripe_plan_id" value="{{ plan.stripe_plan_id }}" placeholder="e.g. price_1234567890">
+                            <div class="form-text">If using Stripe, enter the Stripe Plan ID. Leave blank for free plans.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the features and benefits of this plan">{{ plan.description }}</textarea>
+                    <div class="form-text">Provide a detailed description of this plan to help users make informed decisions.</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="price" name="price" required min="0" step="0.01" value="{{ plan.price }}" placeholder="0.00">
+                            <div class="form-text">Set to 0 for free plans.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="currency" class="form-label">Currency <span class="text-danger">*</span></label>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="USD" {% if plan.currency == 'USD' %}selected{% endif %}>USD</option>
+                                <option value="EUR" {% if plan.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                <option value="GBP" {% if plan.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                                <option value="CAD" {% if plan.currency == 'CAD' %}selected{% endif %}>CAD</option>
+                                <option value="AUD" {% if plan.currency == 'AUD' %}selected{% endif %}>AUD</option>
+                                <option value="JPY" {% if plan.currency == 'JPY' %}selected{% endif %}>JPY</option>
+                                <option value="CNY" {% if plan.currency == 'CNY' %}selected{% endif %}>CNY</option>
+                                <option value="INR" {% if plan.currency == 'INR' %}selected{% endif %}>INR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="duration_days" class="form-label">Duration (days) <span class="text-danger">*</span></label>
+                            <select class="form-select" id="duration_days" name="duration_days" required>
+                                <option value="30" {% if plan.duration_days == 30 %}selected{% endif %}>30 days (Monthly)</option>
+                                <option value="90" {% if plan.duration_days == 90 %}selected{% endif %}>90 days (Quarterly)</option>
+                                <option value="180" {% if plan.duration_days == 180 %}selected{% endif %}>180 days (Semi-annually)</option>
+                                <option value="365" {% if plan.duration_days == 365 %}selected{% endif %}>365 days (Yearly)</option>
+                                <option value="0" {% if plan.duration_days == 0 %}selected{% endif %}>Lifetime</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="scrape_limit" class="form-label">Scrape Limit <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="scrape_limit" name="scrape_limit" required min="0" value="{{ plan.scrape_limit }}" placeholder="Number of scrapes allowed (0 for unlimited)">
+                    <div class="form-text">Set the maximum number of scrapes users can perform with this plan. Set to 0 for unlimited.</div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Features</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_export_excel" name="features" value="export_excel" {% if 'export_excel' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_export_excel">
+                                    Excel Export
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_export_csv" name="features" value="export_csv" {% if 'export_csv' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_export_csv">
+                                    CSV Export
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_bulk_scraping" name="features" value="bulk_scraping" {% if 'bulk_scraping' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_bulk_scraping">
+                                    Bulk Scraping
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_api_access" name="features" value="api_access" {% if 'api_access' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_api_access">
+                                    API Access
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_priority_support" name="features" value="priority_support" {% if 'priority_support' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_priority_support">
+                                    Priority Support
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="feature_advanced_filters" name="features" value="advanced_filters" {% if 'advanced_filters' in plan.features %}checked{% endif %}>
+                                <label class="form-check-label" for="feature_advanced_filters">
+                                    Advanced Filters
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if plan.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">Active</label>
+                            <div class="form-text">Enable to make this plan available for users.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_public" name="is_public" {% if plan.is_public %}checked{% endif %}>
+                            <label class="form-check-label" for="is_public">Public</label>
+                            <div class="form-text">Show this plan publicly on the pricing page.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" {% if plan.is_featured %}checked{% endif %}>
+                            <label class="form-check-label" for="is_featured">Featured</label>
+                            <div class="form-text">Highlight this plan as recommended.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="allow_cancellation" name="allow_cancellation" {% if plan.allow_cancellation %}checked{% endif %}>
+                            <label class="form-check-label" for="allow_cancellation">Allow Cancellation</label>
+                            <div class="form-text">Allow users to cancel this subscription.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> This plan currently has <strong>{{ plan.subscriber_count }}</strong> active subscribers.
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('settings.subscription') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

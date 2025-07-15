@@ -1,0 +1,465 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Job Details - {{ job.job_id }} - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .job-status-card {
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    
+    .progress-card {
+        background: linear-gradient(45deg, #f8f9fc, #e3e6f0);
+        border: none;
+        border-radius: 1rem;
+    }
+    
+    .stats-item {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: white;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1rem;
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        width: 0.75rem;
+        height: 0.75rem;
+        background: #4e73df;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #4e73df;
+    }
+    
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: 0.375rem;
+        top: 1.25rem;
+        width: 1px;
+        height: calc(100% - 0.5rem);
+        background: #e3e6f0;
+    }
+    
+    .timeline-item:last-child::after {
+        display: none;
+    }
+    
+    .results-table {
+        font-size: 0.9rem;
+    }
+    
+    .results-table th {
+        background: #f8f9fc;
+        border-color: #e3e6f0;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .email-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+    
+    .job-actions {
+        position: sticky;
+        top: 1rem;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Job Header -->
+    <div class="job-header row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('scrape.jobs') }}" class="btn btn-light btn-sm me-3">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Jobs
+                </a>
+                <div>
+                    <h1 class="h3 mb-0">Job Details</h1>
+                    <p class="mb-0 opacity-75">{{ job.job_id }}</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user me-2"></i>
+                        <strong class="me-2">User:</strong>
+                        <span>{{ job.user.username if job.user else 'Anonymous' }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-calendar me-2"></i>
+                        <strong class="me-2">Created:</strong>
+                        <span>{{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-link me-2"></i>
+                        <strong class="me-2">Total URLs:</strong>
+                        <span>{{ job.total_urls }}</span>
+                    </div>
+                    {% if job.completed_at %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong class="me-2">Completed:</strong>
+                        <span>{{ job.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-end">
+            <div class="job-actions">
+                {% if job.status == 'completed' and job.result_file %}
+                    <a href="{{ url_for('scrape.download_job', job_id=job.job_id) }}" 
+                       class="btn btn-success btn-lg mb-2">
+                        <i class="fas fa-download me-2"></i>Download Results
+                    </a>
+                {% endif %}
+                <br>
+                <button type="button" 
+                        class="btn btn-danger"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteJobModal">
+                    <i class="fas fa-trash me-2"></i>Delete Job
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status and Progress Section -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card job-status-card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Job Progress & Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stats-item">
+                                <div class="stats-value 
+                                    {% if job.status == 'completed' %}text-success
+                                    {% elif job.status == 'failed' %}text-danger
+                                    {% elif job.status == 'in_progress' %}text-warning
+                                    {% else %}text-secondary{% endif %}">
+                                    {% if job.status == 'completed' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif job.status == 'failed' %}
+                                        <i class="fas fa-times-circle"></i>
+                                    {% elif job.status == 'in_progress' %}
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    {% else %}
+                                        <i class="fas fa-clock"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="stats-label">{{ job.status.replace('_', ' ').title() }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="stats-item">
+                                <div class="stats-value text-primary">{{ job.successful_urls or 0 }}</div>
+                                <div class="stats-label">Successful URLs</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="stats-item">
+                                <div class="stats-value text-success">{{ job.emails_found or 0 }}</div>
+                                <div class="stats-label">Emails Found</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    {% if job.total_urls > 0 %}
+                    {% set progress = ((job.successful_urls / job.total_urls) * 100) if job.successful_urls else 0 %}
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold">Progress</span>
+                            <span class="text-muted">{{ "%.1f"|format(progress) }}%</span>
+                        </div>
+                        <div class="progress" style="height: 1rem;">
+                            <div class="progress-bar 
+                                {% if job.status == 'completed' %}bg-success
+                                {% elif job.status == 'failed' %}bg-danger
+                                {% else %}bg-warning{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ progress }}%"
+                                aria-valuenow="{{ progress }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                                {{ "%.1f"|format(progress) }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card progress-card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>Job Information
+                    </h6>
+                    
+                    <div class="timeline-item">
+                        <div class="fw-bold">Job Created</div>
+                        <small class="text-muted">{{ job.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                    </div>
+                    
+                    {% if job.status == 'in_progress' %}
+                    <div class="timeline-item">
+                        <div class="fw-bold text-warning">Currently Processing</div>
+                        <small class="text-muted">Job is actively running</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.completed_at %}
+                    <div class="timeline-item">
+                        <div class="fw-bold text-success">Job Completed</div>
+                        <small class="text-muted">{{ job.completed_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.result_file %}
+                    <div class="timeline-item">
+                        <div class="fw-bold text-info">Results Available</div>
+                        <small class="text-muted">File ready for download</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    {% if results %}
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-table me-2"></i>Scraped Results ({{ results|length }} records)
+                </h6>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" id="exportVisible">
+                        <i class="fas fa-download me-1"></i>Export Visible
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="toggleAll">
+                        <i class="fas fa-expand-arrows-alt me-1"></i>Toggle All
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            {% for key in results[0].keys() if results %}
+                            <th>{{ key.replace('_', ' ').title() }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr>
+                            {% for key, value in result.items() %}
+                            <td class="{% if 'email' in key.lower() %}email-cell{% endif %}">
+                                {% if value %}
+                                    {% if 'email' in key.lower() %}
+                                        <a href="mailto:{{ value }}" class="text-decoration-none">{{ value }}</a>
+                                    {% elif 'url' in key.lower() or 'link' in key.lower() %}
+                                        <a href="{{ value }}" target="_blank" class="text-decoration-none" rel="noopener noreferrer">
+                                            {{ value[:50] }}{% if value|length > 50 %}...{% endif %}
+                                        </a>
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-file-excel fa-3x text-gray-300 mb-3"></i>
+            <h4 class="text-gray-600">No Results Available</h4>
+            <p class="text-gray-500">
+                {% if job.status == 'in_progress' %}
+                    This job is still processing. Results will appear here once the job is completed.
+                {% elif job.status == 'failed' %}
+                    This job failed to complete. No results were generated.
+                {% else %}
+                    No results file found for this job.
+                {% endif %}
+            </p>
+            {% if job.status == 'in_progress' %}
+            <button class="btn btn-primary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh Page
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Job Modal -->
+<div class="modal fade" id="deleteJobModal" tabindex="-1" aria-labelledby="deleteJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteJobModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Job
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this scraping job?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All job data and result files will be permanently deleted.
+                </div>
+                <div class="job-summary">
+                    <strong>Job ID:</strong> {{ job.job_id }}<br>
+                    <strong>User:</strong> {{ job.user.username if job.user else 'Anonymous' }}<br>
+                    <strong>Emails Found:</strong> {{ job.emails_found or 0 }}<br>
+                    <strong>Created:</strong> {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('scrape.delete_job', job_id=job.job_id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Job
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable if results exist
+    {% if results %}
+    const table = $('#resultsTable').DataTable({
+        responsive: true,
+        pageLength: 50,
+        order: [],
+        columnDefs: [
+            { className: "text-center", targets: "_all" }
+        ],
+        language: {
+            search: "Search results:",
+            emptyTable: "No results found in this job"
+        },
+        dom: 'frtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+
+    // Export visible data
+    $('#exportVisible').on('click', function() {
+        table.button('.buttons-csv').trigger();
+    });
+
+    // Toggle all columns
+    let allVisible = true;
+    $('#toggleAll').on('click', function() {
+        table.columns().visible(allVisible ? false : true);
+        allVisible = !allVisible;
+        $(this).html(allVisible ? 
+            '<i class="fas fa-expand-arrows-alt me-1"></i>Toggle All' : 
+            '<i class="fas fa-compress-arrows-alt me-1"></i>Show All'
+        );
+    });
+    {% endif %}
+
+    // Auto-refresh for in-progress jobs
+    {% if job.status == 'in_progress' %}
+    setInterval(function() {
+        location.reload();
+    }, 10000); // Refresh every 10 seconds for in-progress jobs
+    {% endif %}
+
+    // Real-time progress updates for in-progress jobs
+    {% if job.status == 'in_progress' %}
+    function updateProgress() {
+        fetch(`/api/job-status/{{ job.job_id }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'in_progress') {
+                    location.reload(); // Reload if status changed
+                }
+                // Update progress bar and stats if needed
+                // This would require additional API endpoints
+            })
+            .catch(error => {
+                console.log('Progress update failed:', error);
+            });
+    }
+
+    // Update every 5 seconds for live progress
+    setInterval(updateProgress, 5000);
+    {% endif %}
+});
+</script>
+{% endblock %} 

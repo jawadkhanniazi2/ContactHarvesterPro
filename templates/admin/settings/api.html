@@ -1,0 +1,298 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}API Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">API Settings</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">Settings</a></li>
+        <li class="breadcrumb-item active">API Settings</li>
+    </ol>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- API Configuration -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>API Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="api_enabled" class="form-label">API Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="api_enabled" name="api_enabled" 
+                                           {% if settings.api_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="api_enabled">
+                                        Enable API Access
+                                    </label>
+                                </div>
+                                <div class="form-text">Enable or disable API access for all users</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="api_version" class="form-label">API Version</label>
+                                <select class="form-select" id="api_version" name="api_version">
+                                    <option value="v1" {% if settings.api_version == 'v1' %}selected{% endif %}>v1</option>
+                                    <option value="v2" {% if settings.api_version == 'v2' %}selected{% endif %}>v2</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="rate_limit" class="form-label">Rate Limit (requests per minute)</label>
+                                <input type="number" class="form-control" id="rate_limit" name="rate_limit" 
+                                       value="{{ settings.rate_limit or 60 }}" min="1" max="1000">
+                                <div class="form-text">Maximum API requests per minute per user</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="max_concurrent" class="form-label">Max Concurrent Jobs</label>
+                                <input type="number" class="form-control" id="max_concurrent" name="max_concurrent" 
+                                       value="{{ settings.max_concurrent or 5 }}" min="1" max="50">
+                                <div class="form-text">Maximum concurrent scraping jobs per API user</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="allowed_origins" class="form-label">Allowed Origins (CORS)</label>
+                            <textarea class="form-control" id="allowed_origins" name="allowed_origins" rows="3" 
+                                      placeholder="https://example.com&#10;https://app.example.com&#10;*">{{ settings.allowed_origins or '*' }}</textarea>
+                            <div class="form-text">One origin per line. Use * to allow all origins (not recommended for production)</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="require_https" name="require_https" 
+                                           {% if settings.require_https %}checked{% endif %}>
+                                    <label class="form-check-label" for="require_https">
+                                        Require HTTPS
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="api_logging" name="api_logging" 
+                                           {% if settings.api_logging %}checked{% endif %}>
+                                    <label class="form-check-label" for="api_logging">
+                                        Enable API Logging
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save API Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>API Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">API Base URL</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ request.url_root }}api/v1/" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this.previousElementSibling)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Documentation</label>
+                        <div class="d-grid">
+                            <a href="/api/docs" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-book me-2"></i>View API Documentation
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Status</label>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{{ 'success' if settings.api_enabled else 'danger' }} me-2">
+                                {{ 'Active' if settings.api_enabled else 'Disabled' }}
+                            </span>
+                            <small class="text-muted">Version {{ settings.api_version or 'v1' }}</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tip:</strong> Users need to generate API keys from their profile to access the API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Keys Management -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-key me-2"></i>API Keys
+            </h5>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" onclick="refreshApiKeys()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if api_keys %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Key Name</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Requests</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key in api_keys %}
+                            <tr>
+                                <td>{{ key.user.username }}</td>
+                                <td>{{ key.name }}</td>
+                                <td>{{ key.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ key.last_used_at.strftime('%Y-%m-%d %H:%M') if key.last_used_at else 'Never' }}</td>
+                                <td>{{ key.request_count or 0 }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if key.is_active else 'danger' }}">
+                                        {{ 'Active' if key.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if key.is_active %}
+                                            <button class="btn btn-outline-warning" title="Deactivate" 
+                                                    onclick="toggleApiKey('{{ key.id }}', false)">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-outline-success" title="Activate" 
+                                                    onclick="toggleApiKey('{{ key.id }}', true)">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger" title="Delete" 
+                                                onclick="deleteApiKey('{{ key.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No API Keys Generated</h6>
+                    <p class="text-muted">Users haven't generated any API keys yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(element) {
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value);
+    
+    // Show feedback
+    const button = element.nextElementSibling;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function refreshApiKeys() {
+    window.location.reload();
+}
+
+function toggleApiKey(keyId, activate) {
+    if (confirm(`Are you sure you want to ${activate ? 'activate' : 'deactivate'} this API key?`)) {
+        // In a real implementation, this would make an AJAX call
+        fetch(`/admin/api/keys/${keyId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ active: activate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error.message);
+        });
+    }
+}
+
+function deleteApiKey(keyId) {
+    if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+        // In a real implementation, this would make an AJAX call
+        fetch(`/admin/api/keys/${keyId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error.message);
+        });
+    }
+}
+</script>
+{% endblock %} 

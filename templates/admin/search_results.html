@@ -1,0 +1,343 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>Search Results</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h6>Search Results for "{{ query }}"</h6>
+    </div>
+    <div class="card-body">
+        {% if not query %}
+        <div class="alert alert-info">
+            <h5 class="alert-heading">No Search Query</h5>
+            <p>Please enter a search term to find users, jobs, and other resources.</p>
+        </div>
+        {% elif not results.users and not results.jobs and not results.blog_posts and not results.pages and not results.settings %}
+        <div class="alert alert-warning">
+            <h5 class="alert-heading">No Results Found</h5>
+            <p>No matches found for "<strong>{{ query }}</strong>". Please try a different search term.</p>
+        </div>
+        {% else %}
+        <!-- Users Results -->
+        {% if results.users %}
+        <h5 class="mb-3">Users ({{ results.users|length }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in results.users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if user.profile_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.username }}" class="user-avatar me-2" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='img/default-avatar.png') }}" alt="{{ user.username }}" class="user-avatar me-2" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <div>{{ user.first_name }} {{ user.last_name }}</div>
+                                    <small class="text-muted">@{{ user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% for role in user.roles %}
+                            <span class="badge bg-info">{{ role.name }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('admin.login_as_user', user_id=user.id) }}" class="btn btn-sm btn-info" title="Login as User">
+                                <i class="fas fa-user-secret"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <!-- Jobs Results -->
+        {% if results.jobs %}
+        <h5 class="mb-3">Scrape Jobs ({{ results.jobs|length }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Completion</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in results.jobs %}
+                    <tr>
+                        <td>{{ job.job_id[:8] }}...</td>
+                        <td>
+                            {% if job.user %}
+                            <a href="{{ url_for('admin.edit_user', user_id=job.user.id) }}">
+                                {{ job.user.username }}
+                            </a>
+                            {% else %}
+                            Anonymous
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if job.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif job.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% elif job.status == 'in_progress' %}
+                            <span class="badge bg-primary">In Progress</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if job.total_urls and job.successful_urls %}
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ (job.successful_urls / job.total_urls * 100)|int }}%;" 
+                                     aria-valuenow="{{ (job.successful_urls / job.total_urls * 100)|int }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ (job.successful_urls / job.total_urls * 100)|int }}%
+                                </div>
+                            </div>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('scrape.view_job', job_id=job.job_id) }}" class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if job.status == 'completed' %}
+                            <a href="{{ url_for('scrape.download_job', job_id=job.job_id) }}" class="btn btn-sm btn-success" title="Download Results">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <!-- Blog Posts Results -->
+        {% if results.blog_posts %}
+        <h5 class="mb-3">Blog Posts ({{ results.blog_posts|length }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in results.blog_posts %}
+                    <tr>
+                        <td>{{ post.title }}</td>
+                        <td>
+                            {% if post.author %}
+                            <a href="{{ url_for('admin.edit_user', user_id=post.author.id) }}">
+                                {{ post.author.username }}
+                            </a>
+                            {% else %}
+                            Unknown
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if post.published %}
+                            <span class="badge bg-success">Published</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('blog.edit_post', post_id=post.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('blog.view_post', slug=post.slug) }}" class="btn btn-sm btn-info" title="View" target="_blank">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <!-- Pages Results -->
+        {% if results.pages %}
+        <h5 class="mb-3">Pages ({{ results.pages|length }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Slug</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in results.pages %}
+                    <tr>
+                        <td>{{ page.title }}</td>
+                        <td>{{ page.slug }}</td>
+                        <td>
+                            {% if page.published %}
+                            <span class="badge bg-success">Published</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ page.updated_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('page.edit_page', page_id=page.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('page.view_page', slug=page.slug) }}" class="btn btn-sm btn-info" title="View" target="_blank">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <!-- Settings Results -->
+        {% if results.settings %}
+        <h5 class="mb-3">Settings ({{ results.settings|length }})</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for setting in results.settings %}
+                    <tr>
+                        <td>{{ setting.key }}</td>
+                        <td>
+                            {% if 'password' in setting.key %}
+                            <em>Hidden for security</em>
+                            {% else %}
+                            {{ setting.value }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ setting.category or 'General' }}</span>
+                        </td>
+                        <td>
+                            {% if setting.category == 'site' %}
+                            <a href="{{ url_for('settings.site') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            {% elif setting.category == 'email' %}
+                            <a href="{{ url_for('settings.email') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h6>Search Tips</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <h6><i class="fas fa-user text-primary me-2"></i> Finding Users</h6>
+                    <ul>
+                        <li>Search by username, first name, last name, or email</li>
+                        <li>Use partial names to find similar matches</li>
+                        <li>Case-insensitive search</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <h6><i class="fas fa-tasks text-primary me-2"></i> Finding Jobs</h6>
+                    <ul>
+                        <li>Search by job ID</li>
+                        <li>Use partial job IDs to find similar matches</li>
+                        <li>Jobs are sorted by creation date (newest first)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div>
+                    <h6><i class="fas fa-search text-primary me-2"></i> Advanced Search</h6>
+                    <ul>
+                        <li>For more specific filtering, use the dedicated user or job management pages</li>
+                        <li>Search results are limited to the most recent/relevant items</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
