@@ -36,4 +36,33 @@ results/*
 
 # System files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Backup files
+backups/
+
+# Test files
+test_*.py
+*_test.py
+test.json
+test_*.txt
+simple_*.py
+quick_*.py
+
+# SSH keys and sensitive files
+ssh key*
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.temp
+
+# Production specific
+.env.production
